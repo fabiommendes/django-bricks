@@ -1,0 +1,29 @@
+# Cached builds
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.dll
+*.egg
+*.egg-info/
+*.log
+.cache/
+.coverage
+
+# Build directories
+docs/_build/
+build/
+dist/
+
+# Old/private files
+private/
+
+# Python-boilerplate auto generated files
+src/bricks/__meta__.py
+
+# IDEs
+.idea/
+
+# Testing and temporary files
+.tox/
