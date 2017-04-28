@@ -7,6 +7,7 @@ MutableMeta = type(collections.MutableMapping)
 
 
 class DictMeta(ComponentMeta, MutableMeta):
+
     def __init__(self, name, bases, ns):
         ComponentMeta.__init__(self, name, bases, ns)
         MutableMeta.__init__(self, name, bases, ns)
@@ -20,7 +21,7 @@ class Mapping(Component, collections.MutableMapping, metaclass=DictMeta):
     class Meta:
         tag = 'dl'
 
-    _tag_name = 'dl'
+    tag_name = 'dl'
     _classname = 'dict'
 
     @property
@@ -32,7 +33,7 @@ class Mapping(Component, collections.MutableMapping, metaclass=DictMeta):
         if self.__has_init:
             raise AttributeError('cannot set children')
 
-    def __init__(self, data, cls='pyml-mapping', **kwargs):
+    def __init__(self, children, cls='pyml-mapping', **kwargs):
         # Specific init parameters
         escape_keys = kwargs.pop('escape_keys', None)
         escape_values = kwargs.pop('escape_values', None)
@@ -48,7 +49,7 @@ class Mapping(Component, collections.MutableMapping, metaclass=DictMeta):
             self.escape_keys = True if escape is None else escape
         if escape_values is None:
             self.escape_values = True if escape is None else escape
-        self._data = collections.OrderedDict(data)
+        self._data = collections.OrderedDict(children)
 
     def __delitem__(self, key):
         del self._data[key]

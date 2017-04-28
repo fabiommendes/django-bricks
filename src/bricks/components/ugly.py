@@ -1,4 +1,5 @@
 class DatePicker(Component):
+
     class Meta:
         requires = ['jquery', 'jquery-ui']
 

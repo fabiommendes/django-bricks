@@ -1,5 +1,5 @@
-srvice$dialog = (function($) {
-    byId = srvice$util.byId;
+bricks$dialog = (function($) {
+    byId = bricks$util.byId;
 
     function _asDialog(elem) {
         if (elem.showModal === undefined) {
@@ -28,7 +28,7 @@ srvice$dialog = (function($) {
         var html = args.html;
         if (args.sourceId) {
             html = (html || '') + byId(args.sourceId).innerHTML;
-            srvice.bind(dialog);
+            bricks.bind(dialog);
         }
 
         if (args.url) {
@@ -87,7 +87,7 @@ srvice$dialog = (function($) {
         the dialog.
 
      */
-    srvice.dialog = function (options) {
+    bricks.dialog = function (options) {
         return _getDialog(options, function (dialog) {
             _asDialog(dialog).showModal();
         });
@@ -98,7 +98,7 @@ srvice$dialog = (function($) {
      *
      * Accept the same arguments as the dialog() function.
      */
-    srvice.closeDialog = function (options) {
+    bricks.closeDialog = function (options) {
         return _getDialog(options, function (dialog) {
             _asDialog(dialog).close();
         });
@@ -109,7 +109,7 @@ srvice$dialog = (function($) {
      *
      * Accept the same arguments as the dialog() function.
      */
-    srvice.toggleDialog = function (options) {
+    bricks.toggleDialog = function (options) {
         return _getDialog(options, function (dialog) {
             dialog = _asDialog(dialog);
             if (dialog.open) {

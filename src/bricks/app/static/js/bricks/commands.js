@@ -1,10 +1,10 @@
 // DEPRECATED???
-// srvice supported commands. These functions run the JSON-encoded commands
+// bricks supported commands. These functions run the JSON-encoded commands
 // sent by the server.
-var srvice$actions = (function($) {
+var bricks$actions = (function($) {
     function statements(json) {
         for (var i = 0; i < json.data.length; i++) {
-            srvice.exec(json.data[i]);
+            bricks.exec(json.data[i]);
         }
     }
 
@@ -17,7 +17,7 @@ var srvice$actions = (function($) {
     }
 
     function dialog(json) {
-        srvice.show_dialog(json.data, json);
+        bricks.show_dialog(json.data, json);
     }
 
     function refresh() {

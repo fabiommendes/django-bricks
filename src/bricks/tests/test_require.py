@@ -12,14 +12,14 @@ def test_require_simple_library_by_bundle():
 
 def test_require_bundled_library():
     assert require_assets('bootstrap') == possible_assets('bootstrap.css') + \
-                                          possible_assets('bootstrap.js')
+        possible_assets('bootstrap.js')
 
 
 def test_multiple_requires():
     assert require_assets('bootstrap', 'jquery') == \
-           possible_assets('bootstrap.css') + \
-           possible_assets('bootstrap.js') + \
-           possible_assets('jquery.js')
+        possible_assets('bootstrap.css') + \
+        possible_assets('bootstrap.js') + \
+        possible_assets('jquery.js')
 
 
 def test_asset_with_deps():
@@ -28,9 +28,9 @@ def test_asset_with_deps():
                    static='with-deps.js')
     assets = require_assets('with-deps.js')
     expected = possible_assets('jquery.js') + \
-               possible_assets('bootstrap.css') + \
-               possible_assets('bootstrap.js') + \
-               [main]
+        possible_assets('bootstrap.css') + \
+        possible_assets('bootstrap.js') + \
+        [main]
     print(assets)
     print(expected)
     assert assets == expected

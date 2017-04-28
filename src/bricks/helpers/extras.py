@@ -30,7 +30,7 @@ def render_tag(tag, data=None, attrs=None, children_kwargs=None, request=None,
         data = ''
     children_kwargs = children_kwargs or {}
     data = render(data, request=request, **children_kwargs)
-    attrs = _attrs(attrs, **attrs_kwargs)
+    attrs = _attrs(attrs, request=request, **attrs_kwargs)
     if attrs:
         attrs = safe(' ') + attrs
     return safe('<%s%s>%s</%s>' % (tag, attrs, data, tag))

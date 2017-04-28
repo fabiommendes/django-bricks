@@ -1,5 +1,5 @@
 // Utility functions
-srvice$util = (function($) {
+bricks$util = (function($) {
     /**
      * Apply dialog polyfill to dialog on unsupported browsers and display it
      * afterwards.

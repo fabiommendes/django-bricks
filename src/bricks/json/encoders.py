@@ -42,8 +42,7 @@ def encode(data):
         json = _encode_single_dispatch(data)
     except TypeError as ex:
         raise JSONEncodeError(str(ex))
-    if (isinstance(json, dict) and
-                '@' not in json and
+    if (isinstance(json, dict) and '@' not in json and
             not isinstance(data, dict)):
         json['@'] = CLASS_TO_NAMES[type(data)]
     return json

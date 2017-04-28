@@ -1,5 +1,10 @@
 // Define the encode(), decode(), dumps() and loads() functions
-var srvice$json = (function($) {
+var bricks$json = (function ($) {
+    function JsAction(js, result) {
+        this.js = js;
+        this.result = result
+    };
+
     // The library requires a dictionary with conversions for each supported
     // data type. This extends plain JSON to types that are not natively
     // supported by converting then to an dictionary with a {'@': type-name}
@@ -8,7 +13,7 @@ var srvice$json = (function($) {
         // Javascript objects. You might need to encode if they have a "@" key
         object: {
             constructor: Object,
-            encode: function(x) {
+            encode: function (x) {
                 var out = {};
 
                 for (key in x) {
@@ -17,7 +22,7 @@ var srvice$json = (function($) {
 
                 return {'@': 'object', data: out};
             },
-            decode: function(x) {
+            decode: function (x) {
                 return x.data || {};
             }
         },
@@ -25,37 +30,55 @@ var srvice$json = (function($) {
         // Javascript dates
         date: {
             constructor: Date,
-            encode: function(x) {
+            encode: function (x) {
                 return {
+                    '@': 'datetime',
                     time: x.getTime(),
                     timezone: x.getTimezoneOffset()
                 };
             },
-            decode: function(x) {
+            decode: function (x) {
                 return new Date(x.time + x.timezone);
             }
-        }
+        },
+
+        // JsAction objects
+        "js-action": {
+            constructor: JsAction,
+            encode: function (x) {
+                return {
+                    '@': 'js-action',
+                    js: x.js,
+                    result: x.result,
+                };
+            },
+            decode: function (x) {
+                var result = new JsAction(x.js, x.result);
+                return result;
+            },
+        },
     };
 
     // Encode/decode JSON like structures. Do not follow inheritance since it tends
     // to be broken in js.
     function encode(x) {
-        /**:srvice.json.encode(obj)
+        /**:bricks.json.encode(obj)
 
-            Encode object into a JSON-compatible structure.
+         Encode object into a JSON-compatible structure.
          */
         return json_codec_worker(x, true)
     }
 
 
     function decode(x) {
-        /**:srvice.json.decode(obj)
+        /**:bricks.json.decode(obj)
 
-            Return the Javascript object equivalent to the given
-            JSON-compatible structure.
+         Return the Javascript object equivalent to the given
+         JSON-compatible structure.
 
          */
-        return json_codec_worker(x, false)}
+        return json_codec_worker(x, false)
+    }
 
 
     function json_codec_worker(json, encode) {
@@ -64,7 +87,7 @@ var srvice$json = (function($) {
 
         // Don't like undefined values
         if (json === undefined) {
-            throw "cannot " + (encode? "encode": "decode") + " undefined values";
+            throw "cannot " + (encode ? "encode" : "decode") + " undefined values";
         }
 
         // Return valid atomic types (but not subtypes)
@@ -78,7 +101,7 @@ var srvice$json = (function($) {
 
         // Convert arrays recursively
         if (json instanceof Array) {
-            return $.map(json, function(x) {
+            return $.map(json, function (x) {
                 return [json_codec_worker(x, encode)];
             });
         }
@@ -95,12 +118,12 @@ var srvice$json = (function($) {
             return out;
         }
 
-        // Decode objects
         if (json.constructor === Object && decode) {
             if ('@' in json) {
-                var decoder = json['@'];
+                // Decode objects
+                var node = json_converters[json['@']];
                 delete json['@'];
-                return  json_converters[decoder].decode(out);
+                return node.decode(json);
             }
 
             out = {};
@@ -110,10 +133,11 @@ var srvice$json = (function($) {
             return out;
         }
 
+
         // Convert arbitrary JS types
         if (encode) {
             for (var name in  json_converters) {
-                var conv =  json_converters[name];
+                var conv = json_converters[name];
 
                 if (json.constructor === conv.constructor) {
                     var encoded = conv.encode(json);
@@ -133,9 +157,9 @@ var srvice$json = (function($) {
 
 
     function dumps(obj) {
-        /**:srvice.json.dumps(obj)
+        /**:bricks.json.dumps(obj)
 
-            Stringfy javascript object to a JSON stream.
+         Stringfy javascript object to a JSON stream.
          */
 
         var encoded = encode(obj);
@@ -144,14 +168,17 @@ var srvice$json = (function($) {
 
 
     function loads(data) {
-        /**:srvice.json.loads(String data)
+        /**:bricks.json.loads(String data)
 
-            Load javascript object from a JSON encoded string.
+         Load javascript object from a JSON encoded string.
          */
 
         var encoded = $.parseJSON(data);
         return decode(encoded);
     }
 
-    return {encode: encode, decode: decode, loads: loads, dumps: dumps}
+    return {
+        encode: encode, decode: decode, loads: loads, dumps: dumps,
+        JsAction: JsAction
+    }
 }(jQuery));

@@ -1,6 +1,7 @@
 import collections
 import weakref
 
+from bricks.helpers import safe
 from bricks.helpers.attr import html_natural_attr, attrs as _attrs
 
 
@@ -21,9 +22,9 @@ class Attrs(collections.MutableMapping):
         try:
             return self._data[key]
         except KeyError:
-            if key == 'class':
+            if key == 'class' and self.parent.classes:
                 return ' '.join(self.parent.classes)
-            elif key == 'id':
+            elif key == 'id' and self.parent.id:
                 return self.parent.id
             raise
 
@@ -31,11 +32,11 @@ class Attrs(collections.MutableMapping):
         try:
             del self._data[key]
         except KeyError:
-            self._key_check(key)
+            self._key_check_before_mutation(key)
             raise
 
     def __setitem__(self, key, value):
-        self._key_check(key)
+        self._key_check_before_mutation(key)
         self._data[key] = value
 
     def __len__(self):
@@ -51,7 +52,7 @@ class Attrs(collections.MutableMapping):
             yield 'class'
         yield from iter(self._data)
 
-    def _key_check(self, key):
+    def _key_check_before_mutation(self, key):
         if key == 'class':
             raise KeyError('cannot modify the class via `attrs`.')
         elif key == 'id':
@@ -65,12 +66,11 @@ class Attrs(collections.MutableMapping):
         """
         self, *args = args
         if args:
-            super().update(*args)
+            super(Attrs, self).update(*args)
         for k, v in kwargs.items():
             self[html_natural_attr(k)] = v
 
-    def to_dict(self, attrs=None, replace_class=False, exclude_class=False,
-                exclude_id=False):
+    def to_dict(self, attrs=None, exclude_class=False, exclude_id=False):
         """
         Return a dictionary from attribute values, possibly passing a dictionary
         with extra attributes.
@@ -81,7 +81,7 @@ class Attrs(collections.MutableMapping):
                 rendering.
             replace_class (bool):
                 If True and attrs contain a 'class' key, it will replace the
-                class instead of adding a new value.
+                class instead of adding new values.
             exclude_class (bool):
                 If True, exclude the class attribute.
             exclude_id (bool):
@@ -99,14 +99,13 @@ class Attrs(collections.MutableMapping):
             data['id'] = parent.id
         if (not exclude_class) and parent.classes:
             data['class'] = ' '.join(parent.classes)
-        if (not replace_class) and 'class' in attrs:
-            classes = attrs['class']
-            parent_classes = ' '.join(parent.classes)
-            if not isinstance(classes, str):
-                classes = ' '.join(classes)
-            if parent_classes:
-                classes = '%s %s' % (parent_classes, classes)
-            data['class'] = classes
+        if 'class' in attrs:
+            classes = list(parent.classes)
+            new_classes = attrs['class']
+            if isinstance(new_classes, str):
+                new_classes = new_classes.split()
+            classes.extend(new_classes)
+            data['class'] = ' '.join(classes)
         return data
 
     def has_own_attrs(self):
@@ -124,16 +123,30 @@ class Attrs(collections.MutableMapping):
 
         return dict(self._data)
 
-    def render(self, attrs=None, append_class=True, **kwargs):
+    def render(self, request, attrs=None, exclude_class=False,
+               exclude_id=False, **kwargs):
         """
         Renders attributes, possibly passing a dictionary with extra attributes
         key-values or overrides.
         """
 
-        data = self.to_dict(attrs, append_class)
-        if not data.get('class'):
-            data.pop('class', None)
-        return _attrs(data)
+        result = []
+        data = self.to_dict(attrs,
+                            exclude_class=exclude_class,
+                            exclude_id=exclude_id)
+
+        # Draw id and class before
+        if 'id' in data:
+            result.append('id="%s"' % data.pop('id'))
+        if 'class' in data:
+            result.append('class="%s"' % data.pop('class'))
+
+        # Draw all other attributes
+        tail = _attrs(data)
+        if tail:
+            result.append(tail)
+
+        return ' '.join(result)
 
     def copy(self, new_parent):
         """
@@ -144,6 +157,22 @@ class Attrs(collections.MutableMapping):
         new._parent = weakref.ref(new_parent)
         new._data = self._data.copy()
         return new
+
+    def _as_inner_repr(self):
+        result = []
+        classes = self.parent.classes
+        if self.parent.id:
+            result.append('id=%r' % self.parent.id)
+        if classes:
+            data = classes[0] if len(classes) == 1 else classes
+            result.append('class_=%r' % data)
+
+        # Check safe attributes
+        if all('-' not in x for x in self._data):
+            result.extend('%s=%r' % item for item in self._data.items())
+        else:
+            result.extend('attrs=%r' % self._data)
+        return ', '.join(result)
 
 
 class FrozenAttrs(Attrs):
@@ -162,3 +191,8 @@ class FrozenAttrs(Attrs):
 
     def _immutable_error(self):
         return TypeError('Attributes are immutable')
+
+
+@_attrs.register(Attrs)
+def _(attrs, request=None, **kwargs):
+    return safe(attrs.render(request, **kwargs))

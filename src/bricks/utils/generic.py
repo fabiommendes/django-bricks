@@ -1,5 +1,6 @@
 from abc import get_cache_token
-from functools import _find_impl, update_wrapper  #TODO: we should not use undocumented APIs!
+# TODO: we should not use undocumented APIs!
+from functools import _find_impl, update_wrapper
 from types import MappingProxyType
 from weakref import WeakKeyDictionary
 

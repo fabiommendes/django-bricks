@@ -1,7 +1,10 @@
 import collections
 import weakref
 
+from markupsafe import Markup
+
 from bricks.helpers import render, safe
+from bricks.request import request
 
 
 class Children(collections.MutableSequence):
@@ -42,24 +45,25 @@ class Children(collections.MutableSequence):
         return repr(self._data)
 
     def __str__(self):
-        return str(self.render())
+        return str(self.render(request))
 
     def __html__(self):
         return self.render()
 
     def _attach(self, obj):
-        if obj.parent not in (None, self):
-            raise ValueError('cannot insert object that has a parent')
-        obj.parent = self.parent
+        pass
 
     def _detach(self, obj):
-        obj.parent = None
+        pass
 
     def _convert(self, value, escape=True):
         if isinstance(value, self._component_classes):
             return value
         elif isinstance(value, str):
             return self._text_factory(value, escape=escape)
+        elif (isinstance(value, type) and
+              issubclass(value, self._component_classes)):
+            return value()
         else:
             type_name = value.__class__.__name__
             raise TypeError('cannot insert child of type %r' % type_name)
@@ -70,14 +74,17 @@ class Children(collections.MutableSequence):
             'component class.'
         )
 
+    def _as_inner_repr(self):
+        """
+        Used by repr to properly repr children nodes.
+        """
+
+        def inner_repr(x):
+            return repr(str(x)) if isinstance(x, (str, Markup)) else repr(x)
+        return ', '.join(map(inner_repr, self))
+
     def extend(self, values, escape=True):
-        values = [self._convert(x) for x in values]
-        for x in values:
-            if not x.parent in (None, self):
-                raise ValueError('cannot insert object that has a parent')
-        for x in values:
-            x.parent = self
-        self._data.extend(values)
+        self._data.extend(self._convert(x) for x in values)
 
     def insert(self, i, obj, escape=True):
         obj = self._convert(obj, escape)
@@ -89,8 +96,8 @@ class Children(collections.MutableSequence):
         self._attach(obj)
         self._data.append(obj)
 
-    def render(self, **kwargs):
-        return safe(''.join(render(x, **kwargs) for x in self))
+    def render(self, request, **kwargs):
+        return safe(''.join(render(x, request=request, **kwargs) for x in self))
 
 
 class FrozenChildren(Children):

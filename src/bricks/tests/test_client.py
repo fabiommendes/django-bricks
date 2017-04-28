@@ -40,11 +40,11 @@ def test_client_error(client):
 
 
 def test_chain(client):
-    client.srvice('foo', 1, 2, 3)\
+    client.bricks('foo', 1, 2, 3)\
         .then(client.function('x')[
-           'alert(x)'
+            'alert(x)'
         ])
-    assert js_compile(client) == "var __v1 = srvice('foo', 1, 2, 3);\n"\
+    assert js_compile(client) == "var __v1 = bricks('foo', 1, 2, 3);\n"\
                                  "var __v2 = __v1.then(function(x) {\n" \
                                  "    alert(x);\n" \
                                  "});"
@@ -52,5 +52,5 @@ def test_chain(client):
 
 def test_dialog(client):
     client.dialog(html='Hello world!')
-    assert js_compile(client) == "var __v1 = srvice.dialog({"\
+    assert js_compile(client) == "var __v1 = bricks.dialog({"\
                                  "html: 'Hello world!'});"

@@ -28,7 +28,7 @@ Utilities
 """
 
 from .escape import safe, escape, escape_silent, unescape, sanitize
-from .attr import attr, attrs
+from .attr import attr, attrs, js_class, join_classes
 from .hyperlink import hyperlink
 from .render import render
 from .extras import render_tag, markdown

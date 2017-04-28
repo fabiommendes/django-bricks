@@ -1,17 +1,16 @@
 from markupsafe import Markup
 from bricks.components import FrozenChildren, FrozenAttrs
-from bricks.components.mixins import HasParentMixin
 from bricks.helpers import unescape, escape as _escape, safe
 
 
-class Text(HasParentMixin, Markup):
+class Text(Markup):
     """
     Base text element node.
 
     It extends the Markup object with a Component-compatible API.
     """
 
-    __slots__ = ('_parent')
+    __slots__ = ()
 
     @property
     def children(self):
@@ -43,9 +42,6 @@ class Text(HasParentMixin, Markup):
                 return Markup.__new__(cls, _escape(data))
         else:
             return Markup.__new__(cls, data)
-
-    def __init__(self, data, escape=True, parent=None):
-        HasParentMixin.__init__(self, parent)
 
     def render(self, request, **kwargs):
         return self.__html__()

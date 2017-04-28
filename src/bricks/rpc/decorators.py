@@ -1,9 +1,9 @@
 """
 ==============================================
-Srvice: Javascript and Django working together
+bricks: Javascript and Django working together
 ==============================================
 
-The srvice framework corresponds of a small javascript library and a python
+The bricks framework corresponds of a small javascript library and a python
 counterpart that makes javascript integrate well with django. The core
 functionality is the ability to call python server-side functions and scripts
 from client in a very transparent way.
@@ -12,12 +12,12 @@ All communication between the client and the server is done through JSON. The
 client calls a server-side API as if it were a Javascript function and the
 server may implement client-side behaviors in Python functions that are
 transmitted back to the user and executed in Javascript. On top of this
-functionality, srvice also implements some sugar.
+functionality, bricks also implements some sugar.
 
 How does it work?
 =================
 
-Srvice uses JSON to communicate between client and server. Even making some
+bricks uses JSON to communicate between client and server. Even making some
 "extensions" to JSON, this implies that there is a limitation in what kind of
 objects can be transmitted from the client to the server and vice-versa. First
 we extend JSON so all objects/dictionaries that have a "@" key are handled
@@ -71,7 +71,7 @@ The first part to be processed is the "critical" key. If present, it encodes
 any internal error that has occurred in the process of calling the server-side
 function (but not errors raised by the function). These errors can be:
 
-1. Invalid method used in HTTP request. In most cases, srvice expect POST
+1. Invalid method used in HTTP request. In most cases, bricks expect POST
    requests.
 2. Could not decode input arguments or the resulting value to JSON.
 3. The user is not allowed to call the given method.
@@ -91,9 +91,9 @@ message.
 
 These errors are actually processed **after** the "program" part of the
 response. The program is a sequence of instructions to be executed in the
-client as if it were a javascript function. The srvice.js library can handle
+client as if it were a javascript function. The bricks.js library can handle
 several instructions, which are documented in ???. In the server, these
-instructions are codified in the :class:`srvice.Client`.
+instructions are codified in the :class:`bricks.Client`.
 
 Finally, the "result" key stores the JSON-encoded return value for the function.
 
@@ -101,7 +101,7 @@ Finally, the "result" key stores the JSON-encoded return value for the function.
 Model query
 ===========
 
-With srvice, javascript can query and modify registered models in the database.
+With bricks, javascript can query and modify registered models in the database.
 For obvious security reasons, we do not expose any model by default, but rather,
 the user must register explicitly each model that can be transmitted or modified
 by the client. This process allows one to specify explicitly which fields
@@ -112,8 +112,7 @@ should be available to each user.
 """
 from functools import wraps, partial
 
-from bricks.views import (SrviceAPIView, SrviceProgramView,
-                          SrviceJsView)
+from .views import RPCView
 
 __all__ = ['api', 'program', 'js', 'html']
 
@@ -162,12 +161,12 @@ def make_view(view_cls, func, **kwargs):
 def api(func, pattern=None, **kwargs):
     """
     Convert a regular Python function in a remote function that can be called
-    from Javascript using the :js:func:`srvice()` function. Communication
+    from Javascript using the :js:func:`bricks()` function. Communication
     between client and server is done through JSON.
 
     On views.py::
 
-        @srvice.api
+        @bricks.api
         def fib(request, n):
             if n <= 1:
                 return 1
@@ -186,7 +185,7 @@ def api(func, pattern=None, **kwargs):
 
     .. code:: javascript
 
-        srvice('/fib-func', 5)
+        bricks('/fib-func', 5)
             .then(function(result) {
                 alert("Fib(5) = " + result);
             });
@@ -195,12 +194,12 @@ def api(func, pattern=None, **kwargs):
 
     .. code:: javascript
 
-        var result = srvice('/fib-func', 5).value();
+        var result = bricks('/fib-func', 5).value();
         alert("Fib(5) = " + result);
 
     Keyword Args:
         name:
-            Name of the API entry point. By default, srvice uses the a
+            Name of the API entry point. By default, bricks uses the a
             "app-label.func-name" convention, in which the "app-label"
             corresponds to the root level of the module path in which the
             function was defined and "func-name" is the Python function name.
@@ -213,7 +212,7 @@ def api(func, pattern=None, **kwargs):
             order to access the API.
     """
 
-    return make_view(SrviceAPIView, func, **kwargs)
+    return make_view(RPCView, func, **kwargs)
 
 
 @decorator
@@ -223,7 +222,7 @@ def program(func, pattern=None, **kwargs):
 
     This function can be used as a decorator or as a regular function call::
 
-        @srvice.program
+        @bricks.program
         def fat(request, client, n):
             result = 1
             for i in range(1, n + 1):
@@ -234,7 +233,7 @@ def program(func, pattern=None, **kwargs):
 
     """
 
-    return make_view(SrviceProgramView, func, **kwargs)
+    return make_view(RPCView, func, **kwargs)
 
 
 @decorator
@@ -243,7 +242,7 @@ def html(func, pattern=None, **kwargs):
     Register an HTML API point.
     """
 
-    return make_view(SrviceHTMLView, func, **kwargs)
+    return make_view(RPCView, func, **kwargs)
 
 
 @decorator
@@ -252,39 +251,39 @@ def js(func, pattern=None, **kwargs):
     Register a javascript API point.
     """
 
-    return make_view(SrviceJsView, func, **kwargs)
+    return make_view(RPCView, func, **kwargs)
 
 
 def route(pattern, *, name=None, method='program', **kwargs):
     """
-    Uses Wagtail's RouterPage route decorator and marks the method as a srvice
+    Uses Wagtail's RouterPage route decorator and marks the method as a bricks
     API.
     """
 
     from wagtail.contrib.wagtailroutablepage.models import route
 
-    # Mapping from names to srvice decorators
-    srvice_decorator = {
+    # Mapping from names to bricks decorators
+    bricks_decorator = {
         'api': api,
         'program': program,
         'html': html,
         'js': js,
     }[method]
-    srvice_kwargs = kwargs
+    bricks_kwargs = kwargs
 
     # We create a wrapped method that is decorated with the @route decorator
     # from wagtailroutablepage.
     #
-    # Inside the wrapped method, we choose some specific srvice decorator
-    # and apply the correct srvice decorator, instantiate the view and call
+    # Inside the wrapped method, we choose some specific bricks decorator
+    # and apply the correct bricks decorator, instantiate the view and call
     # it with the proper request.
     def decorator(func):
         @route(pattern, name=name)
         def wrapped_method(self, request, *args, **kwargs):
             bind_method = partial(func, self)
-            srvice_function = srvice_decorator(**srvice_kwargs)(bind_method)
-            srvice_view = srvice_function.as_view()
-            response = srvice_view(request, *args, **kwargs)
+            bricks_function = bricks_decorator(**bricks_kwargs)(bind_method)
+            bricks_view = bricks_function.as_view()
+            response = bricks_view(request, *args, **kwargs)
             return response
 
         func.__dict__.update(wrapped_method.__dict__)
@@ -293,7 +292,7 @@ def route(pattern, *, name=None, method='program', **kwargs):
     return decorator
 
 
-def srvice_register(view_cls, *args, name=None, register=True, **kwargs):
+def bricks_register(view_cls, *args, name=None, register=True, **kwargs):
     """
     Worker function for api and program callbacks.
     """
@@ -304,11 +303,11 @@ def srvice_register(view_cls, *args, name=None, register=True, **kwargs):
             name, *args = args
 
         def decorator(func):
-            srvice_register(view_cls, func, *args, name=name)
+            bricks_register(view_cls, func, *args, name=name)
             return func
         return decorator
 
-    # Register SrviceView
+    # Register RPCView
     if len(args) == 2:
         if name is None:
             name, *args = args
@@ -329,9 +328,9 @@ def srvice_register(view_cls, *args, name=None, register=True, **kwargs):
     view = view_cls.as_view(func, name=name, **kwargs)
 
     if register:
-        if name in __srvice_registry__:
+        if name in __bricks_registry__:
             raise ValueError('api %r already exists' % name)
-        __srvice_registry__[name] = view
+        __bricks_registry__[name] = view
     return view
 
-__srvice_registry__ = {}
+__bricks_registry__ = {}

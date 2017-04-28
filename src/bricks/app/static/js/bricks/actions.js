@@ -5,7 +5,7 @@
      * @param url
      * @param replace
      */
-    srvice.go = function (url, link) {
+    bricks.go = function (url, link) {
         if (link) {
             window.location.href = url;
         } else {

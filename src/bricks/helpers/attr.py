@@ -1,9 +1,10 @@
 import collections
 import re
 
-from . import safe
 from bricks.json import dumps as json_dump
+from bricks.types import str_types
 from bricks.utils import lazy_singledispatch
+from . import safe
 
 SAFE_ATTRIBUTE_NAME = re.compile(r'^[^\s\=\<\>\&\"\']+$')
 
@@ -116,18 +117,21 @@ def _(none, **kwargs):
 
 @attrs.register(collections.Mapping)
 def _attrs_maping(map, **kwargs):
+    kwargs.pop('request', None)
+
     if kwargs:
         kwargs = {html_natural_attr(k): v for k, v in kwargs.items()}
         map = collections.OrderedDict(map, **kwargs)
-    elems = []
+
+    elements = []
     for k, v in map.items():
         if v is False or v is None:
             continue
         elif v is True:
-            elems.append(k)
+            elements.append(k)
         else:
-            elems.append('%s="%s"' % (k, attr(v)))
-    return safe(' '.join(elems))
+            elements.append('%s="%s"' % (k, attr(v)))
+    return safe(' '.join(elements))
 
 
 @attrs.register(collections.Sequence)
@@ -135,3 +139,33 @@ def _(map, **kwargs):
     if isinstance(map, (str, bytes)):
         raise TypeError('strings are not supported')
     return _attrs_maping(collections.OrderedDict(map), **kwargs)
+
+
+def join_classes(*args):
+    """
+    Similar to js_class, but returns a list of class strings.
+    """
+
+    result = []
+    for arg in args:
+        if not arg:
+            continue
+        elif isinstance(arg, str_types):
+            result.extend(arg.split())
+        else:
+            result.extend([x for x in arg if x])
+    return result
+
+
+def js_class(*args):
+    """
+    Converts a list of classes into a JS compatible class string ignoring
+    empty/null entries.
+
+    Examples:
+        >>> js_class('foo', 'bar', '')
+        'foo bar'
+        >>> js_class('foo', ['bar', 'baz'])
+        'foo bar baz'
+    """
+    return ' '.join(join_classes(*args))

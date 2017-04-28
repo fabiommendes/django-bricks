@@ -30,6 +30,7 @@ def test_dumps_object_to_string():
 
 def test_register_new_type():
     class Foo:
+
         def __eq__(self, other):
             return self.__dict__ == other.__dict__
 
@@ -81,6 +82,8 @@ def test_round_trip(elem):
 #
 # Test errors
 #
+
+
 def test_json_encoding_error():
     class FooBar:
         pass

@@ -27,6 +27,7 @@ def decode(data):
                 msg = 'invalid type: {"@": "%s", ...}' % data_type
                 raise JSONDecodeError(msg)
             return decoder({k: v for (k, v) in data.items() if k != '@'})
+        return {k: decode(v) for k, v in data.items()}
     return data
 
 

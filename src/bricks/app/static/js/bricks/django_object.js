@@ -1,4 +1,4 @@
-function srvice$getModelClass(model) {
+function bricks$getModelClass(model) {
     return DjangoModel;
 }
 
@@ -27,8 +27,8 @@ DjangoModel.prototype.toObject = function() {
  * Updates object in the database.
  */
 DjangoModel.prototype.save = function() {
-    return srvice.rpc({
-        api: srvice.srviceURI + 'srvice::save-object/',
+    return bricks.rpc({
+        api: bricks.bricksURI + 'bricks::save-object/',
         args: [this._djangoModel, this.toObject()],
     })
 };
@@ -36,27 +36,27 @@ DjangoModel.prototype.save = function() {
 
 DjangoModel.prototype.objects = {
     get: function(args) {
-        return srvice.get(this._djangoModel, args);
+        return bricks.get(this._djangoModel, args);
     },
 
     filter: function(args) {
-        return srvice.filter(this._djangoModel, args);
+        return bricks.filter(this._djangoModel, args);
     },
 
     exclude: function(args) {
-        return srvice.filter(this._djangoModel, args);
+        return bricks.filter(this._djangoModel, args);
     }
 };
 
 /**
  * Retrieve Django model from the database.
  */
-srvice.get = function(model, args) {
-    return srvice.rpc({
-        api: srvice.srviceURI + 'srvice::get-object/',
+bricks.get = function(model, args) {
+    return bricks.rpc({
+        api: bricks.bricksURI + 'bricks::get-object/',
         args: [model, args],
         converter: function(data) {
-            var cls = srvice$getModelClass(model);
+            var cls = bricks$getModelClass(model);
             return new cls(data.result, model);
         }
     })

@@ -51,12 +51,12 @@ class AssetManager:
         dependencies = list(self._required)
         possible = {name: possible_assets(name) for name in self._required}
         for name in list(dependencies):
-            L = possible[name]
-            non_bundle = [x for x in L if not isinstance(x, Bundle)]
+            dep_list = possible[name]
+            non_bundle = [x for x in dep_list if not isinstance(x, Bundle)]
             if non_bundle:
                 possible[name] = non_bundle
-            elif len(L) == 1:
-                bundle = L[0]
+            elif len(dep_list) == 1:
+                bundle = dep_list[0]
                 idx = dependencies.index(name)
                 del dependencies[idx]
                 for dependency in bundle:
@@ -227,18 +227,12 @@ class AssetManager:
         return '\n'.join(lines)
 
     def render_head(self):
-        L = [
-            self.render_css(),
-            self.render_js_head(),
-        ]
-        return '\n'.join([x for x in L if x])
+        head_deps = [self.render_css(), self.render_js_head()]
+        return '\n'.join([x for x in head_deps if x])
 
     def render_foot(self):
-        L = [
-            self.render_js_foot(),
-            self.render_js_on_load(),
-        ]
-        return '\n'.join([x for x in L if x])
+        foot_deps = [self.render_js_foot(), self.render_js_on_load()]
+        return '\n'.join([x for x in foot_deps if x])
 
     # Global state
     def capture(self):

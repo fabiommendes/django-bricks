@@ -5,9 +5,8 @@ from functools import singledispatch
 from lazyutils import lazy
 
 import bricks.json.common
-from bricks.exceptions import EvalError, InternalError, RangeError, ReferenceError, \
-    URIError
-from bricks.json import decoders
+from bricks.exceptions import \
+    EvalError, InternalError, RangeError, ReferenceError, URIError
 
 is_var_name_re = re.compile(r'^[a-zA-Z_]+[a-zA-Z0-9_]*$')
 
@@ -17,7 +16,7 @@ class JsSource(UserString):
     A string of javascript source code.
     """
 
-    def  __init__(self, source, client):
+    def __init__(self, source, client):
         self.client = client
         self.client._actions.append(self)
         super().__init__(source)
@@ -61,7 +60,7 @@ class JsFunctionCall(JsVariable):
     # List of functions that are known for not returning anything.
     _impure_functions = [
         'alert', 'console.log',
-        'srvice.go',
+        'bricks.go',
     ]
 
     def __init__(self, name, client, args, kwargs):
@@ -236,7 +235,7 @@ class Client:
         Function is used to raise an error in the client after executing
         some functions::
 
-            @srvice.program
+            @bricks.program
             def sqrt(js, x):
                 value = math.sqrt(x) if x >=0 else None
 
@@ -287,7 +286,7 @@ class Client:
         link. Otherwise, make a new http request.
         """
 
-        return self.srvice.go(url, link)
+        return self.bricks.go(url, link)
 
     def dialog(self, html=None, *,
                dialog='dialog',
@@ -315,21 +314,25 @@ class Client:
                 DOM to have its HTML copied into the dialog.
         """
 
-        # Choose the srvice method associated with the action
+        # Choose the bricks method associated with the action
         if action == 'open':
-            method = self.srvice.dialog
+            method = self.bricks.dialog
         elif action == 'close':
-            method = self.srvice.closeDialog
+            method = self.bricks.closeDialog
         elif action == 'toggle':
-            method = self.srvice.toggleDialog
+            method = self.bricks.toggleDialog
         else:
             raise ValueError('invalid action: %r' % action)
 
         kwargs = {}
-        if html: kwargs['html'] = str(html)
-        if dialog != 'dialog': kwargs['dialogId'] = dialog
-        if container: kwargs['dialogContentId'] = container
-        if source: kwargs['sourceId'] = source
+        if html:
+            kwargs['html'] = str(html)
+        if dialog != 'dialog':
+            kwargs['dialogId'] = dialog
+        if container:
+            kwargs['dialogContentId'] = container
+        if source:
+            kwargs['sourceId'] = source
         return method(**kwargs)
 
 
@@ -357,7 +360,7 @@ def js_source(x):
     if hasattr(x, '_js_source_'):
         return x._js_source_()
     else:
-        return 'srvice.json.decode(%s)' % bricks.json.common.dumps(x)
+        return 'bricks.json.decode(%s)' % bricks.json.common.dumps(x)
 
 
 @js_source.register(str)

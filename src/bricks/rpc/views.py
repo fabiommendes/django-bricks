@@ -1,20 +1,24 @@
 import io
 import traceback
+from logging import getLogger
 
+import sys
 from django import http
 from django.utils.html import escape
 from django.views.generic import View
+from lazyutils import lazy
 
-import bricks.json.common
 from bricks.js.client import Client, js_compile
+from bricks.json import loads, dumps, register
 
-__all__ = ['BadResponseError', 'SrviceView', 'SrviceAPIView',
-           'SrviceProgramView', 'SrviceHtmlView', 'SrviceJsView']
+log = getLogger('bricks.rpc')
 
 
 class BadResponseError(Exception):
-    """Exception raised when an srvice API would return an error response
-    object."""
+    """
+    Exception raised when an bricks API would return an error response
+    object.
+    """
 
     def __init__(self, *args, **kwds):
         super().__init__(args)
@@ -30,17 +34,20 @@ class BadResponseError(Exception):
             return http.HttpResponseServerError()
 
 
-class SrviceView(View):
+class BadRequestError(Exception):
     """
-    Wraps a srvice API/Program/etc into a view.
+    Exception raised when users make invalid requests.
+    """
 
-    Users should more conveniently use the :func:`srvice.program` or
-    :func:`srvice.api decorators`.
+
+class RPCView(View):
+    """
+    Wraps a Bricks RPC end point into a view.
 
 
     Args:
         function:
-            (required) The function handle that implements the given API.
+            (required) The function that implements the given API.
         login_required:
             If True, the API will only be available to logged in users.
         perms_required:
@@ -49,31 +56,32 @@ class SrviceView(View):
     """
 
     # Class constants and attributes
-    valid_content_types = {
+    valid_request_mimetypes = {
         'application/json',
         'application/javascript',
         'text/x-json'
     }
-    srvice = None
+    bricks = None
     function = None
     action = None
     login_required = None
     perms_required = None
+    request_argument = True
     name = None
 
-    @property
+    @lazy
     def DEBUG(self):
         from django.conf import settings
         return settings.DEBUG
 
     # Constructor
     def __init__(self, function, action='api', login_required=False,
-                 perms_required=None, ignore_url_args=False, **kwds):
+                 perms_required=None, request_argument=True, **kwds):
         self.function = function
         self.action = action
         self.login_required = login_required
         self.perms_required = perms_required
-        self.ignore_url_args = ignore_url_args
+        self.request_argument = request_argument
         super().__init__(**kwds)
 
     def get_data(self, request):
@@ -81,36 +89,61 @@ class SrviceView(View):
         Decode and return data sent by the client.
         """
 
+        # Check if user is using a valid content/type
+        mimetype = request.content_type
+        if mimetype not in self.valid_request_mimetypes:
+            raise BadRequestError('invalid content/type: %r' % mimetype)
+
+        # Decode data
         try:
             data_bytes = request.body
-            payload = bricks.json.common.loads(data_bytes.decode('utf8'))
+            payload = loads(data_bytes.decode('utf8'))
         except Exception as ex:
-            raise BadResponseError(http.HttpResponseServerError(ex))
+            log.info('invalid JSON request at %s: %s' % (request.url, ex))
+            raise BadRequestError('invalid JSON')
+
+        # Check for JSON-RPC 2.0 header
+        if payload.get('jsonrpc', None) != '2.0':
+            raise BadRequestError('not a JSON-RPC 2.0 request')
+
         return payload
 
-    def process_data(self, request, data):
+    def execute(self, request, data):
         """
         Execute the API function and return a dictionary with the results.
         """
 
-        error = result = program = None
-        args = data.get('args', ())
-        kwargs = data.get('kwargs', {})
-        if not self.ignore_url_args:
-            if self.args:
-                args = self.args + tuple(args)
-            if self.kwargs:
-                for k, v in self.kwargs.items():
-                    kwargs.setdefault(k, v)
+        id = data.get('id', None)
+        params = data.get('params', {})
 
-        out = {}
+        # Choose how params are interpreted
+        if isinstance(params, (list, tuple)):
+            args = params
+            kwargs = {}
+        else:
+            args = params.pop('*args', [])
+            kwargs = params
 
+        # Add request first argument
+        client = Client(request)
+        if self.request_argument:
+            args.insert(0, client)
+
+        # Prepare response object
+        response = {'jsonrpc': '2.0'}
+        if id is not None:
+            response['id'] = id
+
+        # Execute function and prepare for any errors
         try:
-            out.update(self.execute(request, *args, **kwargs))
+            result = self.function(*args, **kwargs)
+            js_data = js_compile(client)
+            response['result'] = \
+                JsAction(js=js_data, result=result) if js_data else result
         except Exception as ex:
-            out['error'] = self.wrap_error(ex, ex.__traceback__)
+            response['error'] = self.wrap_error(ex, ex.__traceback__)
 
-        return out
+        return response
 
     def wrap_error(self, ex, tb=None, wrap_permission_errors=False):
         """
@@ -122,26 +155,25 @@ class SrviceView(View):
             raise BadResponseError(response)
 
         # Now we create the error object to be sent to javascript
+        ex_class = ex.__class__
+        ex_fqualname = ex_class.__module__ + '.' + ex_class.__name__
         error = {
-            'error': type(ex).__name__,
-            'message': str(ex)
+            'code': getattr(ex, 'code', 0),
+            'message': str(ex),
+            'data': {
+                'exception': ex_fqualname,
+            }
         }
+
+        # Print traceback if running in debug mode
         if self.DEBUG:
             file = io.StringIO()
             traceback.print_tb(tb or ex.__traceback__, file=file)
-            print(ex, file=file)
-            error['traceback'] = '<pre>%s</pre>' % escape(file.getvalue())
+            file.write('\n%s: %s' % (ex_fqualname, ex))
+            html = '<pre>%s</pre>' % escape(file.getvalue())
+            error['data']['traceback_html'] = html
+            print(file.getvalue(), file=sys.stderr)
         return error
-
-    def execute(self, request, *args, **kwargs):
-        """
-        Execute API action.
-
-        Any exceptions are wrapped into an error dictionary and sent back in
-        the final response.
-        """
-
-        return {'result': self.function(request, *args, **kwargs)}
 
     def check_credentials(self, request):
         """
@@ -150,10 +182,10 @@ class SrviceView(View):
         Must raise a BadResponseError if credentials are not valid.
         """
 
-        if self.login_required or self.perms_required:
-            if request.user is None:
-                response = http.HttpResponseForbidden('login required')
-                raise BadResponseError(response)
+        if request.user is None and (
+                    self.login_required or self.perms_required):
+            response = http.HttpResponseForbidden('login required')
+            raise BadResponseError(response)
 
         if self.perms_required:
             user = request.user
@@ -162,142 +194,87 @@ class SrviceView(View):
                     msg = 'user does not have permission: %s' % perm
                     response = http.HttpResponseForbidden(msg)
                     raise BadResponseError(response)
-        # TODO: check csrf token
+                    # TODO: check csrf token
 
-    def get_payload(self, data):
+    def get_raw_response(self, request, data):
         """
         Return the payload that will be sent back to the client.
 
         The default implementation simply converts data to JSON.
         """
 
-        result = data.get('result')
-        program = data.get('program')
-        error = data.get('error')
-
-        # Encode result value
-        if result is not None:
-            try:
-                result = bricks.json.common.dumps(result)
-            except Exception as ex:
-                response = http.HttpResponseServerError(ex)
-                raise BadResponseError(response)
-        if program is not None:
-            try:
-                program = bricks.json.common.dumps(program)
-            except Exception as ex:
-                response = http.HttpResponseServerError(ex)
-                raise BadResponseError(response)
-        if error is not None:
-            try:
-                error = bricks.json.common.dumps(error)
-            except Exception as ex:
-                response = http.HttpResponseServerError(ex)
-                raise BadResponseError(response)
-
-        # Manually construct the JSON payload
-        payload = ['{']
-        if result:
-            payload.append('"result":%s,' % result)
-        if program:
-            payload.append('"program":%s,' % program)
-        if error:
-            payload.append('"error":%s,' % error)
-        if payload[-1].endswith(','):
-            payload[-1] = payload[-1][:-1]
-        payload.append('}')
-        payload = ''.join(payload)
-        return payload
+        try:
+            return dumps(data)
+        except Exception as ex:
+            response = http.HttpResponseServerError(ex)
+            raise BadResponseError(response)
 
     def get_content_type(self):
-        """Content type of the resulting message.
+        """
+        Content type of the resulting message.
 
-        For JSON, it returns 'application/json'."""
+        For JSON, it returns 'application/json'.
+        """
 
         return 'application/json'
 
     def post(self, request, *args, **kwargs):
-        """Process the given request, call handler and return result."""
+        """
+        Process the given request, call handler and return result.
+        """
 
         try:
             self.check_credentials(request)
             data = self.get_data(request)
-            out = self.process_data(request, data)
-            payload = self.get_payload(out)
+            response = self.execute(request, data)
+            raw_response = self.get_raw_response(request, response)
             content_type = self.get_content_type()
         except BadResponseError as ex:
-            return ex.response
+            if hasattr(ex, 'response'):
+                return ex.response
+            raise
 
-        return http.HttpResponse(payload, content_type=content_type)
+        return http.HttpResponse(raw_response, content_type=content_type)
 
     def get(self, request, *args, **kwargs):
         return http.HttpResponseForbidden(
-            'this api-point does not allow GET AJAX requests.'
+            'this api-point does not allow AJAX GET requests.'
         )
 
 
-class SrviceAPIView(SrviceView):
+def jsonrpc_endpoint(login_required=False, perms_required=None):
     """
-    View to functions registered with the @api decorator.
-    """
+    Decorator that converts a function into a JSON-RPC enabled view.
 
-    srvice = 'api'
+    After using this decorator, the function is not usable as a regular function
+    anymore.
 
+    .. code-block:: python
 
-class SrviceProgramView(SrviceView):
-    """
-    View to functions registered with the @program decorator.
-    """
-
-    srvice = 'program'
-
-    def get_client(self):
-        """
-        Return a new Client instance.
-        """
-
-        return Client(self.request)
-
-    def execute(self, request, *args, **kwargs):
-        out = {}
-        self.client = self.get_client()
-        try:
-            out['result'] = self.function(self.client, *args, **kwargs)
-        except Exception as ex:
-            out['error'] = self.wrap_error(ex, ex.__traceback__)
-        out['program'] = js_compile(self.client)
-        return out
-
-
-class SrviceResponseView(SrviceView):
-    """
-    View to functions that return response objects.
+        @jsonrpc_endpoint(login_required=True)
+        def add_at_server(request, x=1, y=2):
+            return x + y
     """
 
-    data_variable = None
+    def decorator(func):
+        view = RPCView.as_view(function=func, login_required=login_required,
+                               perms_required=perms_required)
+        return view
 
-    def execute(self, request, *args, **kwargs):
-        out = {}
-        try:
-            key = self.data_variable
-            return {key: self.function(request, *args, **kwargs)}
-        except Exception as ex:
-            return {'error': self.wrap_error(ex, ex.__traceback__)}
+    return decorator
 
 
-class SrviceJsView(SrviceResponseView):
-    """
-    View to functions registered with the @js decorator.
-    """
-
-    srvice = 'js'
-    data_variable = 'js_data'
+class JsAction:
+    def __init__(self, js, result):
+        self.js = js
+        self.result = result
 
 
-class SrviceHtmlView(SrviceResponseView):
-    """
-    View to functions registered with the @html decorator.
-    """
+@register(JsAction, 'js-action')
+def encode_js_action(x):
+    return {'@': 'js-action', 'js': x.js, 'result': x.result}
 
-    srvice = 'html'
-    data_variable = 'html_data'
+
+@encode_js_action.register_decoder
+def decode_js_action(x):
+    return JsAction(js=x['js'], result=x['result'])

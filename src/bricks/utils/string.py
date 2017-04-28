@@ -25,4 +25,3 @@ def snake_case(name):
     """
 
     return dash_case(name).replace('-', '_')
-

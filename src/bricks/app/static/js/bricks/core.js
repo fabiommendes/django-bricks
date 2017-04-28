@@ -1,14 +1,14 @@
-var srvice = (function ($) {
-    var json = srvice$json;
-    var actions = srvice$actions;
-    var util = srvice$util;
+var bricks = (function ($) {
+    var json = bricks$json;
+    var actions = bricks$actions;
+    var util = bricks$util;
     var byId = util.byId;
 
     /**
      * Main entry point
      */
-    function srvice() {
-        return srvice_call(arguments, {
+    function bricks() {
+        return bricks_call(arguments, {
             program: true,
             converter: function (x) {
                 return x.result
@@ -18,10 +18,10 @@ var srvice = (function ($) {
 
 
     /**
-     * The synchronous version of the srvice() function.
+     * The synchronous version of the bricks() function.
      */
-    srvice.sync = function () {
-        return srvice_call(arguments, {
+    bricks.sync = function () {
+        return bricks_call(arguments, {
             async: false,
             program: true,
             converter: function (x) {
@@ -32,13 +32,13 @@ var srvice = (function ($) {
 
 
     /**
-     Like the regular srvice function, but will not run any program returned by
+     Like the regular bricks function, but will not run any program returned by
      the server.
 
      .. code:: python
-     import srvice
+     import bricks
 
-     @srvice.program
+     @bricks.program
      def program(client, arg1, arg2, ...):
      if client.request.user is None:
      raise PermissionError
@@ -50,8 +50,8 @@ var srvice = (function ($) {
 
      This function will only handle the 42 result.
      */
-    srvice.call = function () {
-        return srvice_call(arguments, {
+    bricks.call = function () {
+        return bricks_call(arguments, {
             program: false,
             converter: function (x) {
                 return x.result
@@ -63,18 +63,18 @@ var srvice = (function ($) {
      Execute the javascript source code in the given API point in an
      isolated namespace.
 
-     In Django, functions are registered using the @srvice.js decorator::
+     In Django, functions are registered using the @bricks.js decorator::
 
      .. code:: python
-     import srvice
+     import bricks
 
-     @srvice.js
+     @bricks.js
      def js_maker(request, arg1, arg2, arg3, ...):
      return string_of_javascript_code()
 
      */
-    srvice.js = function () {
-        return srvice_call(arguments, {
+    bricks.js = function () {
+        return bricks_call(arguments, {
             method: 'js',
             converter: function (x) {
                 return x.data
@@ -84,22 +84,22 @@ var srvice = (function ($) {
 
 
     /**
-     Retrieve HTML data from a registered srvice template by passing the
+     Retrieve HTML data from a registered bricks template by passing the
      given arguments.
 
-     In Django, functions are registered using the @srvice.html decorator::
+     In Django, functions are registered using the @bricks.html decorator::
 
      .. code:: python
-     import srvice
+     import bricks
 
-     @srvice.html
+     @bricks.html
      def js_maker(request, arg1, arg2, arg3, ...):
      return string_of_html_source()
 
      */
-    srvice.html = function (api) {
-        return srvice_call(arguments, {
-            srvice: 'html',
+    bricks.html = function (api) {
+        return bricks_call(arguments, {
+            bricks: 'html',
             converter: function (x) {
                 return x.data
             }
@@ -108,105 +108,105 @@ var srvice = (function ($) {
 
 
     /**
-     Similar to srvice.html. However, the second argument is a CSS selector
+     Similar to bricks.html. However, the second argument is a CSS selector
      for the elements that will receive the resulting html code.
      */
-    srvice.htmlTo = function () {
+    bricks.htmlTo = function () {
         var selector = arguments[2];
         arguments.splice(1, 1);
 
-        return srvice.html.apply(this, arguments).then(function (html) {
+        return bricks.html.apply(this, arguments).then(function (html) {
             $(selector).html(html);
         });
 
     };
 
     /**
-     Form processing using srvice: the form is converted into the arguments
-     passed to a srvice function which is then executed.
+     Form processing using bricks: the form is converted into the arguments
+     passed to a bricks function which is then executed.
      */
-    srvice.form = function (api, form) {
+    bricks.form = function (api, form) {
         var args = getFormData(form);
         if (args.__pending !== undefined) {
             var pending = args.__pending;
             var send = function () {
                 if (pending.__size === 0) {
                     delete args.__pending;
-                    return srvice(api, args);
+                    return bricks(api, args);
                 } else {
                     setTimeout(send, 50);
                 }
             };
             setTimeout(send, 50);
         } else {
-            return srvice(api, args);
+            return bricks(api, args);
         }
     };
 
     /**
      Bind api element to form submit event.
      */
-    srvice.bindForm = function (api, form) {
+    bricks.bindForm = function (api, form) {
         $(form).submit(function (event) {
             event.preventDefault();
-            srvice.form(api, this);
+            bricks.form(api, this);
         });
     };
 
-    srvice.bindClick = function (api, elem) {
+    bricks.bindClick = function (api, elem) {
         $(elem).click(function (event) {
             event.preventDefault();
-            srvice.click(api, this);
+            bricks.click(api, this);
         })
     };
 
-    srvice.bind = function (api, elem, event) {
+    bricks.bind = function (api, elem, event) {
         if (event == undefined) {
             return bindAuto(api, elem);
         }
 
         // We map event names to events
         return {
-            form: srvice.bindForm,
-            click: srvice.bindClick
+            form: bricks.bindForm,
+            click: bricks.bindClick
         }[event](api, elem);
     };
 
     function bindAuto(api, element) {
         var query;
         if (element === undefined) {
-            query = $('[srvice-bind]');
+            query = $('[bricks-bind]');
         } else {
-            query = $('[srvice-bind]', element);
+            query = $('[bricks-bind]', element);
         }
         bindForms(api, query);
         bindClickable(api, query);
     }
 
-    // Bind all srvice form elements to the submit event
+    // Bind all bricks form elements to the submit event
     function bindForms(api, query) {
         query.filter('form').each(function () {
             if (api === undefined) {
-                api = $(this).attr('srvice-bind');
+                api = $(this).attr('bricks-bind');
             }
             var transform = getBoundTransform(this);
-            srvice.bindForm(api, this, transform);
+            bricks.bindForm(api, this, transform);
         });
     }
 
-    // Bind all clickable elements to srvice
+    // Bind all clickable elements to bricks
     function bindClickable(api, query) {
         query.filter('a, button, input[type=button]').each(function () {
             if (api == undefined) {
-                api = $(this).attr('srvice-bind');
+                api = $(this).attr('bricks-bind');
             }
             var transform = getBoundTransform(this);
-            srvice.bindClick(api, this, transform);
+            bricks.bindClick(api, this, transform);
         });
     }
 
     function getBoundTransform(elem) {
-        var data = $(elem).attr('srvice-transform');
+        var data = $(elem).attr('bricks-transform');
         return undefined;
     }
 
@@ -251,10 +251,10 @@ var srvice = (function ($) {
     }
 
 
-    srvice.rpc = function (args) {
+    bricks.rpc = function (args) {
         /**
-         The workhorse behind srvice(), srvice.run(), srvice.js() and
-         srvice.html() functions. It receives a single dictionary argument
+         The workhorse behind bricks(), bricks.run(), bricks.js() and
+         bricks.html() functions. It receives a single dictionary argument
          that understands the following parameters:
 
          api:
@@ -264,8 +264,8 @@ var srvice = (function ($) {
          kwargs:
          An object with all the named arguments.
          server:
-         Override the default server root. Usually srvice will open the URL
-         at http://<localdomain>/srvice/api-function-name.
+         Override the default server root. Usually bricks will open the URL
+         at http://<localdomain>/bricks/api-function-name.
          async:
          If true, returns a promise. Otherwise, it blocks execution and
          returns the result of the function call.
@@ -289,14 +289,12 @@ var srvice = (function ($) {
             // Initialize parameters
         args = $.extend({
             api: undefined,
-            args: [],
-            kwargs: {},
+            params: {},
             async: true,
             program: true,
             errors: true,
             timeout: 5,
-            method: 'POST',
-            srvice: 'api',
+            bricks: 'api',
             converter: function (x) {
                 return x
             }
@@ -309,26 +307,30 @@ var srvice = (function ($) {
 
         // Create the payload
         var payload = json.dumps({
-            api: args.api,
-            args: args.args,
-            kwargs: args.kwargs,
-            srvice: args.srvice
+            jsonrpc: '2.0',
+            method: args.api,
+            params: args.params,
+            id: Math.random(),
         });
 
         // Create ajax promise object
         var promise = $.ajax({
             url: args.api,
             data: payload,
-            type: args.method,
+            contentType: 'application/json',
             dataType: 'json',
             async: args.async,
+            method: 'POST',
             converters: {
                 "text json": function (x) {
-                    var data = json.loads(x);
-                    console.log(data);
+                    var raw = $.parseJSON(x);
+                    var data = json.decode(raw);
                     args.errors && processErrors(data.error);
-                    args.program && processProgram(data.program);
-                    return args.converter(data);
+                    if (data.result.constructor == json.JsAction) {
+                        processProgram(data.result.js);
+                        data.result = data.result.result;
+                    }
+                    return args.converter(data.result);
                 }
             }
         });
@@ -346,18 +348,18 @@ var srvice = (function ($) {
     function processErrors(error) {
         if (error !== undefined) {
             var errormsg = error.error + ': ' + error.message + '\n\n' + error.traceback;
-            srvice.dialog({html: errormsg});
+            bricks.dialog({html: errormsg});
             throw Error(errormsg);
         }
     }
 
-    // Auxiliary function used to normalize input arguments to many srvice
+    // Auxiliary function used to normalize input arguments to many bricks
     // methods.
-    function srvice_call(args, options) {
-        var api = args[0];
+    function bricks_call(args, options) {
+        var api_url = args[0];
         args = Array.prototype.slice.call(args, 1);
 
-        if (api[api.length - 1] === '*') {
+        if (api_url[api_url.length - 1] === '*') {
             kwargs = {}
         } else if (args.length == 0) {
             args = [];
@@ -370,15 +372,17 @@ var srvice = (function ($) {
         }
 
         // Normalize api name
-        if (api[api.length - 1] !== '/') {
-            api = api + '/';
+        if (api_url[api_url.length - 1] !== '/') {
+            api_url = api_url + '/';
         }
 
         // Create promise and attach value() method
-        var promise = srvice.rpc($.extend({
-            api: api,
-            args: args,
-            kwargs: kwargs
+        if (args.length != 0) {
+            kwargs['*args'] = args
+        }
+        var promise = bricks.rpc($.extend({
+            api: api_url,
+            params: kwargs,
         }, options));
 
         return promise;
@@ -433,16 +437,16 @@ var srvice = (function ($) {
     });
 
 
-    // Configure srvice function and register it in jQuery.
-    $.srvice = srvice;
-    srvice.srviceURI = '/api/';
-    srvice.do = srvice$actions;
-    srvice.json = json;
-    return srvice;
+    // Configure bricks function and register it in jQuery.
+    $.bricks = bricks;
+    bricks.bricksURI = '/api/';
+    bricks.do = bricks$actions;
+    bricks.json = json;
+    return bricks;
 })(jQuery);
 
 
-// Bind all [srvice-bind] elements in the bubbling phase of document load.
+// Bind all [bricks-bind] elements in the bubbling phase of document load.
 window.addEventListener('load', function () {
-    srvice.bind();
+    bricks.bind();
 }, false);

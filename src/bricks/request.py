@@ -2,6 +2,7 @@ class FakeRequest:
     """
     Simulate a basic Django request object interface.
     """
+    node = None
 
     def __init__(self):
         self.method = 'GET'

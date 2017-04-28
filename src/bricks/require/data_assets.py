@@ -16,7 +16,8 @@ class DataAsset(Asset):
             return 'static/' + self.static
 
     def __init__(self, name, static=None, source=None, href=None, **kwargs):
-        count = (static is not None) + (source is not None) + (href is not None)
+        count = (static is not None) + \
+            (source is not None) + (href is not None)
         if count != 1:
             raise TypeError(
                 'must define one and at most one of static, source, '

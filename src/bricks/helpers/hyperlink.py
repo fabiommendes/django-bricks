@@ -9,12 +9,14 @@ from ..utils import lazy_singledispatch
 @lazy_singledispatch
 def hyperlink(x, href=None, attrs=None, **kwargs):
     """
-    Creates an hyperlink from object and renders it as an <a> tag.
+    Creates an hyperlink string from object and renders it as an <a> tag.
 
     It implements some common use cases:
         str:
             Renders string as content inside the <a>...</a> tags. Additional
-            options including href can be passed as keyword arguments.
+            options including href can be passed as keyword arguments. If no
+            href is given, it tries to parse a string of "Value <link>" and
+            uses href='#' if no link is found.
 
         dict or mapping:
             Most keys are interpreted as attributes. The visible content of
@@ -51,6 +53,8 @@ def hyperlink(x, href=None, attrs=None, **kwargs):
 
 @hyperlink.register(Markup)
 def _hyperlink_markup(x, href=None, attrs=None, **kwargs):
+    if href is None:
+        x, href = parse_link(x)
     if href:
         kwargs['href'] = href
     attrs_string = _attrs(attrs, **kwargs)
@@ -61,6 +65,8 @@ def _hyperlink_markup(x, href=None, attrs=None, **kwargs):
 
 @hyperlink.register(str)
 def _(x, href=None, attrs=None, **kwargs):
+    if href is None:
+        x, href = parse_link(x)
     return _hyperlink_markup(escape(x), href, attrs, **kwargs)
 
 
@@ -79,3 +85,17 @@ def _(x, href=None, attrs=None, **kwargs):
 @hyperlink.register('django.db.models.Model')
 def _(x):
     return safe('<a href="%s">%s</a>' % (x.get_absolute_url(), x))
+
+
+def parse_link(name):
+    """
+    Return a tuple with (name, link) from a string of "name<link>".
+
+    If no link is found, the second value is None.
+    """
+
+    if name.endswith('>'):
+        name, sep, link = name.partition('<')
+        if sep:
+            return name, link[:-1]
+    return name, None

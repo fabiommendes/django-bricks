@@ -49,6 +49,7 @@ class CssBlock(HTMLRenderMixin):
         font-size: 0.9em;
     }
     """
+
     def __init__(self, name, data=None, **kwargs):
         self.name = name
         self._data = OrderedDict()
@@ -68,11 +69,13 @@ class CssBlock(HTMLRenderMixin):
 
 
 class CssId(CssBlock):
+
     def render_head(self):
         return '#' + self.name
 
 
 class CssClass(CssBlock):
+
     def render_head(self):
         return '.' + self.name
 

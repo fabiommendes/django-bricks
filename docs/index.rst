@@ -7,7 +7,7 @@ Welcome to Django Bricks's documentation!
 Django Bricks is a library for creating web components for Django. A Brick is a
 reusable object with well defined server-side and client-side behaviors and
 interfaces. Django Bricks allow us to build reusable pieces of functionality
-in Django while avoiding a little bit of Javascript ;)
+in Django while avoiding a little bit of HTML and Javascript ;)
 
 .. toctree::
    :maxdepth: 1
@@ -18,6 +18,7 @@ in Django while avoiding a little bit of Javascript ;)
    Tags <tags.rst>
    Javascript client <js-client.rst>
    Bricks-flavored JSON <json.rst>
+   Remote Procedure Calls (RPC) <rpc.rst>
    API documentation <apidoc.rst>
    Frequently asked questions <faq.rst>
    License <license.rst>

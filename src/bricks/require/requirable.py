@@ -44,7 +44,7 @@ class RequirableMeta(type):
 
     meta_info_class = MetaInfo
 
-    def __init__(cls, name, bases, ns):
+    def __init__(cls, name, bases, ns):  # noqa: F401
         meta_class = ns.pop('Meta', object)
         if not isinstance(meta_class, type):
             raise ValueError('the Meta attribute must be a type.')

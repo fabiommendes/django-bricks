@@ -96,7 +96,7 @@ underscore is simply ignored so ``label("foo", for_="id-bar")`` becomes
 
         with div(id="nav-bar") as element:
             for link in links:
-                a(link.title, href=link.address)
+                +a(link.title, href=link.address)
 
     The resulting HTML is similar to this:
 
@@ -115,8 +115,8 @@ underscore is simply ignored so ``label("foo", for_="id-bar")`` becomes
 
         with article as element:
             with div as block:
-                h1('title', parent=element)
-                p('some paragraph')
+                +h1('title', parent=element)
+                +p('some paragraph')
 
     The h1 element will be a direct child of ``<article>``, instead of ``<div>``.
     The final HTML will be
@@ -140,7 +140,7 @@ PyML is obviously just regular Python, so how can these syntax extensions work?
 Take the example::
 
     element = \
-        div(cls="contact-card") [
+        div(cls="contact-card")[
             span("john", cls="contact-name"),
             span("555-1234", cls="contact-phone"),
         ]

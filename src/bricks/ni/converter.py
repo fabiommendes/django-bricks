@@ -11,6 +11,7 @@ from bricks.ni.to_ast import to_ast
 
 
 class FunctionCallTransform:
+
     def __init__(self, to_name):
         self.to_name = to_name
 
@@ -81,6 +82,7 @@ class Scope(collections.MutableMapping):
 
 
 class Transpiler:
+
     @lazy
     def file(self):
         raise RuntimeError('cannot be accessed outside the write method.')
@@ -161,11 +163,12 @@ def extract_func_args(node):
 
 
 class JsTranspiler(CClassTranspiler):
-    def visit_body(self, L, indent=True):
+
+    def visit_body(self, seq, indent=True):
         if indent:
             self.indent_up()
 
-        for obj in L:
+        for obj in seq:
             self.line_ended = False
             self.visit(obj)
             if not self.line_ended:
@@ -500,12 +503,12 @@ def transpile(obj, lang, file=None, **kwargs):
         raise ValueError('language not supported: %r' % lang)
 
 
-
 class VarType:
     name = None
 
 
 class NamedVarType(VarType):
+
     def __init__(self, name):
         self.name = name
 

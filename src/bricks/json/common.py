@@ -1,12 +1,10 @@
 import base64
-import collections
 import datetime
 import json as _json
-import numbers
 
 from markupsafe import Markup
 
-from bricks.json.util import normalize_class_name
+from .util import normalize_class_name
 from .decoders import decode, register as register_decode
 from .encoders import encode, register as register_encode
 
@@ -39,7 +37,7 @@ def register(cls, name=None, encode=None, decode=None):
     name = normalize_class_name(cls, name)
 
     if (encode is None and decode is not None or
-            decode is None and encode is not None):
+                    decode is None and encode is not None):
         raise ValueError('encoder and decoder must be given')
 
     if encode is None:
@@ -47,6 +45,7 @@ def register(cls, name=None, encode=None, decode=None):
             def decode(dec_func):
                 register_decode(cls, name, dec_func)
                 return dec_func
+
             func.register_decoder = decode
             register_encode(cls, name, func)
             return func
@@ -63,7 +62,8 @@ def loads(data):
     object.
     """
 
-    return decode(_json.loads(data))
+    raw = _json.loads(data)
+    return decode(raw)
 
 
 def dumps(obj):
@@ -71,7 +71,8 @@ def dumps(obj):
     Return a JSON string dump of a Python object.
     """
 
-    return _json.dumps(encode(obj))
+    encoded = encode(obj)
+    return _json.dumps(encoded)
 
 
 #
@@ -80,7 +81,7 @@ def dumps(obj):
 @register(bytes)
 def encode_bytes(data):
     data = base64.b64encode(data).decode('ascii')
-    return {'@': 'bytes', 'data': data}
+    return {'data': data}
 
 
 @encode_bytes.register_decoder
@@ -91,7 +92,7 @@ def decode_bytes(data):
 
 @register(set)
 def encode_set(data):
-    return {'data': list(data)}
+    return {'data': encode(list(data))}
 
 
 @encode_set.register_decoder
@@ -114,23 +115,29 @@ def encode_list(data):
     return [encode(x) for x in data]
 
 
+@encode_list.register_decoder
+def decode_list(data):
+    return tuple(data['data'])
+
 
 # Dictionaries need special treatment because we want to be able to serialize
-# dictionaries with non-string key. Dictioaries with an '@' must also be
+# dictionaries with non-string key. Dictionaries with an '@' must also be
 # supported
 @register(dict, 'dict')
 def encode_dict(data):
     if '@' in data or not all(isinstance(k, str) for k in data.keys()):
-        result = {'data': [[decode(k), decode(v)] for (k, v) in data.items()]}
+        result = {'data': [[encode(k), encode(v)] for (k, v) in data.items()]}
         result['@'] = 'dict'
         return result
-    return {k: decode(v) for (k, v) in data.items()}
+    return {k: encode(v) for (k, v) in data.items()}
 
 
 @encode_dict.register_decoder
 def decode_dict(data):
-    return dict(decode(x) for x in data['data'])
-
+    result = {}
+    for k, v in data['data']:
+        result[decode(k)] = decode(v)
+    return result
 
 #
 # Common Python types (not builtins)
@@ -150,7 +157,6 @@ def decode_datetime(data):
     return datetime.date(data['year'], data['month'], data['day'])
 
 
-
 #
 # Contrib types (not on standard lib)
 #
@@ -162,4 +168,3 @@ def encode_markup(x):
 @encode_markup.register_decoder
 def decode_markup(x):
     return Markup(x['data'])
-
