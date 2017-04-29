@@ -8,7 +8,8 @@ from markupsafe import Markup
 from bricks.helpers import render_tag, join_classes
 from bricks.helpers.render import pretty
 from bricks.mixins import Renderable
-from bricks.require import RequirableMeta, Requirable
+from bricks.require import Requirable
+from bricks.require.requirable import RequirableMeta
 from bricks.utils import dash_case
 from bricks.utils.sequtils import flatten
 from .attrs import Attrs

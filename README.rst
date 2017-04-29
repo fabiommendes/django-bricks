@@ -14,6 +14,7 @@
     :target: https://www.quantifiedcode.com/app/project/ee91ade50a344c87ac99638670c76580
     :alt: Code issues
 
+
 Django web components
 ---------------------
 

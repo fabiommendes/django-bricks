@@ -3,7 +3,7 @@ from pprint import pprint
 import pytest
 
 from bricks.components import Text
-from bricks.components.html5_tags import *
+from bricks.components.html5_tags import div, h1, p, a
 from bricks.helpers import safe
 
 
@@ -23,8 +23,10 @@ def test_json_conversion():
         'tag': 'div',
         'classes': ['foo'],
         'children': [
-            {'tag': 'h1',
-             'children': [{'tag': 'text', 'text': 'bar'}]},
+            {
+                'tag': 'h1',
+                'children': [{'tag': 'text', 'text': 'bar'}]
+                },
             {'tag': 'text', 'text': 'foo <b>bar</b>'},
         ]
     }

@@ -1,3 +1,2 @@
-from .string import *
 from .generic import lazy_singledispatch
-from .random import random_id
+from .string import snake_case, dash_case
