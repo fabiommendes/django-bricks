@@ -1,3 +1,8 @@
+.. image:: https://readthedocs.org/projects/bricks/badge/?version=latest
+    :target: http://bricks.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+
 Django web components
 ---------------------
 

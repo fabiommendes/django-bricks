@@ -1,0 +1,5 @@
+# Ignore folder content
+src/bricks/tests/**
+src/bricks/app/migrations/**
+src/bricks/app/static/**
+tasks.py
