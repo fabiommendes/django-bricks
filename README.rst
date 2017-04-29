@@ -1,7 +1,18 @@
 .. image:: https://readthedocs.org/projects/bricks/badge/?version=latest
     :target: http://bricks.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
-
+.. image:: https://travis-ci.org/fabiommendes/django-bricks.svg?branch=master
+    :target: https://travis-ci.org/fabiommendes/django-bricks
+    :alt: Build status
+.. image:: https://codeclimate.com/github/fabiommendes/django-bricks/badges/gpa.svg
+    :target: https://codeclimate.com/github/fabiommendes/django-bricks
+    :alt: Code Climate
+.. image:: https://codecov.io/gh/fabiommendes/django-bricks/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/fabiommendes/django-bricks
+    :alt: Code coverage
+.. image:: https://www.quantifiedcode.com/api/v1/project/ee91ade50a344c87ac99638670c76580/badge.svg
+    :target: https://www.quantifiedcode.com/app/project/ee91ade50a344c87ac99638670c76580
+    :alt: Code issues
 
 Django web components
 ---------------------
