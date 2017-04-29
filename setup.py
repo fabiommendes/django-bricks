@@ -52,6 +52,7 @@ setup(
         'jinja2',
         'lazyutils',
         'django',
+        'lxml',
     ],
     extras_require={
         'dev': [

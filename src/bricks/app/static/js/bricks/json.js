@@ -62,21 +62,11 @@ var bricks$json = (function ($) {
     // Encode/decode JSON like structures. Do not follow inheritance since it tends
     // to be broken in js.
     function encode(x) {
-        /**:bricks.json.encode(obj)
-
-         Encode object into a JSON-compatible structure.
-         */
         return json_codec_worker(x, true)
     }
 
 
     function decode(x) {
-        /**:bricks.json.decode(obj)
-
-         Return the Javascript object equivalent to the given
-         JSON-compatible structure.
-
-         */
         return json_codec_worker(x, false)
     }
 
@@ -157,22 +147,12 @@ var bricks$json = (function ($) {
 
 
     function dumps(obj) {
-        /**:bricks.json.dumps(obj)
-
-         Stringfy javascript object to a JSON stream.
-         */
-
         var encoded = encode(obj);
         return JSON.stringify(encoded);
     }
 
 
     function loads(data) {
-        /**:bricks.json.loads(String data)
-
-         Load javascript object from a JSON encoded string.
-         */
-
         var encoded = $.parseJSON(data);
         return decode(encoded);
     }

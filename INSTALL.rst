@@ -4,7 +4,7 @@ Installation instructions
 
 Django Bricks can be installed using pip::
 
-    $ python -m pip install Django Bricks
+    $ python -m pip install django-bricks
 
 This command will fetch the archive and its dependencies from the internet and
 install them. 

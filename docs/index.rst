@@ -15,8 +15,8 @@ in Django while avoiding a little bit of HTML and Javascript ;)
    Overview <overview.rst>
    Installation instructions <install.rst>
    Preparing your Django project <django.rst>
-   Tags <tags.rst>
-   Javascript client <js-client.rst>
+   Tags <templating.rst>
+   Bricks.js library <bricksjs.rst>
    Bricks-flavored JSON <json.rst>
    Remote Procedure Calls (RPC) <rpc.rst>
    API documentation <apidoc.rst>

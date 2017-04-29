@@ -34,8 +34,9 @@ or any kind of formal description of a data type and its validation. These are
 orthogonal concerns that could be handled by third party libraries.
 
 Bricks implements transformation for a few common Python types (such as the
-datetime example given bellow) and Bricks.js also a few of them in Javascript
-when feasible.
+datetime example given bellow) and **bricks.js** handles them in Javascript when
+feasible.
+
 
 The :mod:`bricks.json` module
 =============================
@@ -56,6 +57,7 @@ functions:
 
 
 .. _json-custom-types:
+
 
 Custom types
 ============

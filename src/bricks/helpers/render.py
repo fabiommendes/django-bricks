@@ -139,3 +139,22 @@ def register_template(cls, template_name=None, object_context_name=None,
 
 render.register_template = register_template
 render._render_template = render_to_string
+
+
+def pretty(source):
+    """
+    Pretty prints HTML source or element.
+
+    Returns a Markup strings.
+    """
+
+    from lxml import etree, html
+
+    if not isinstance(source, str):
+        source = render(source)
+
+    document_root = html.fromstring(source)
+    pretty = etree.tostring(document_root,
+                            encoding='unicode',
+                            pretty_print=True)
+    return Markup(pretty)

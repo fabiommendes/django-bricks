@@ -11,6 +11,7 @@ The first step is to add Bricks to your installed apps::
         'bricks.app',
     ]
 
+You're done :)
 
-Django Bricks requires a working Jinja2 template engine, even if your project
-only uses Django templates as the main rendering engine.
+(Actually we have to improve this section of our documentation. Come later to
+check it out. But seriously, you can use bricks already!)

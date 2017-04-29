@@ -6,9 +6,11 @@ import threading
 from markupsafe import Markup
 
 from bricks.helpers import render_tag, join_classes
+from bricks.helpers.render import pretty
 from bricks.mixins import Renderable
 from bricks.require import RequirableMeta, Requirable
 from bricks.utils import dash_case
+from bricks.utils.sequtils import flatten
 from .attrs import Attrs
 from .children import Children
 
@@ -93,6 +95,7 @@ class BaseComponent(Requirable,
     def __getitem__(self, item):
         new = self.copy()
         if isinstance(item, (tuple, list)):
+            item = flatten(item)
             new.children.extend([x for x in item if x is not None])
         elif item is not None:
             new.children.append(item)
@@ -160,6 +163,7 @@ class BaseComponent(Requirable,
             parent.children.append(self)
         else:
             raise RuntimeError('unary operator only works inside a with block.')
+        return self
 
     def copy(self, keep_id=True):
         """
@@ -197,6 +201,16 @@ class BaseComponent(Requirable,
 
         content = self.children.render(request, **kwargs)
         return render_tag(self.tag_name, content, self.attrs, request=request)
+
+    def pretty(self):
+        """
+        Render a pretty printed HTML.
+
+        This method is less efficient than .render(), but is useful for
+        debugging
+        """
+
+        return pretty(self)
 
     def json(self, **kwargs):
         """

@@ -4,9 +4,7 @@ var bricks = (function ($) {
     var util = bricks$util;
     var byId = util.byId;
 
-    /**
-     * Main entry point
-     */
+    // Main entry point
     function bricks() {
         return bricks_call(arguments, {
             program: true,
@@ -17,9 +15,7 @@ var bricks = (function ($) {
     }
 
 
-    /**
-     * The synchronous version of the bricks() function.
-     */
+    // The synchronous version of the bricks() function.
     bricks.sync = function () {
         return bricks_call(arguments, {
             async: false,
@@ -31,25 +27,8 @@ var bricks = (function ($) {
     };
 
 
-    /**
-     Like the regular bricks function, but will not run any program returned by
-     the server.
-
-     .. code:: python
-     import bricks
-
-     @bricks.program
-     def program(client, arg1, arg2, ...):
-     if client.request.user is None:
-     raise PermissionError
-
-     client.alert("this will trigger a js alert in the client!")
-     client.jquery('div').hide()
-     client.js('console.log("foo bar")')
-     return 42
-
-     This function will only handle the 42 result.
-     */
+    // Like the regular bricks function, but it does not run any program
+    // returned by the server.
     bricks.call = function () {
         return bricks_call(arguments, {
             program: false,
@@ -59,20 +38,8 @@ var bricks = (function ($) {
         });
     };
 
-    /**
-     Execute the javascript source code in the given API point in an
-     isolated namespace.
 
-     In Django, functions are registered using the @bricks.js decorator::
-
-     .. code:: python
-     import bricks
-
-     @bricks.js
-     def js_maker(request, arg1, arg2, arg3, ...):
-     return string_of_javascript_code()
-
-     */
+    // Consumes and execute javascript
     bricks.js = function () {
         return bricks_call(arguments, {
             method: 'js',
@@ -251,42 +218,9 @@ var bricks = (function ($) {
     }
 
 
+    // Workhorse implementation for bricks(), bricks.call(), etc.
     bricks.rpc = function (args) {
-        /**
-         The workhorse behind bricks(), bricks.run(), bricks.js() and
-         bricks.html() functions. It receives a single dictionary argument
-         that understands the following parameters:
-
-         api:
-         Api name of the called function/program
-         args:
-         List of positional arguments to be passed to the calling function.
-         kwargs:
-         An object with all the named arguments.
-         server:
-         Override the default server root. Usually bricks will open the URL
-         at http://<localdomain>/bricks/api-function-name.
-         async:
-         If true, returns a promise. Otherwise, it blocks execution and
-         returns the result of the function call.
-         method:
-         Can be any of 'api', 'program', 'js', or 'html'.
-         program:
-         If true (default), execute any received programmatic instructions.
-         error:
-         If true (default), it will raise any exceptions raised by the remote
-         call.
-         result:
-         If given, will determine the result value of the function call.
-         timeout:
-         Maximum amount of time (in seconds) to wait for a server response.
-         Default to 30.0.
-         converter:
-         A function that process the resulting JSON result and convert it
-         to the desired value.
-         */
-
-            // Initialize parameters
+        // Initialize parameters
         args = $.extend({
             api: undefined,
             params: {},
