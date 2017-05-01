@@ -52,6 +52,20 @@ class Attrs(collections.MutableMapping):
             yield 'class'
         yield from iter(self._data)
 
+    def __eq__(self, other):
+        if len(self) != len(other):
+            return False
+        try:
+            for k, v in self.items():
+                if other[k] != v:
+                    return False
+            return True
+        except (TypeError, KeyError, IndexError):
+            return NotImplemented
+
+    def __repr__(self):
+        return repr(dict(self))
+
     def _key_check_before_mutation(self, key):
         if key == 'class':
             raise KeyError('cannot modify the class via `attrs`.')

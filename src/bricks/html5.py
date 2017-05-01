@@ -22,4 +22,4 @@ def a_or_span(*args, href=None, **kwargs):
     if href:
         return tags.a(*args, href=href, **kwargs)
     else:
-        return tags.span(*args, href=href, **kwargs)
+        return tags.span(*args, **kwargs)
