@@ -1,6 +1,7 @@
 import collections
 
-from bricks.components import Component, ComponentMeta
+from bricks.components import Component
+from bricks.components.core import ComponentMeta
 from bricks.helpers import escape
 
 MutableMeta = type(collections.MutableMapping)

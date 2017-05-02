@@ -4,6 +4,8 @@ import bricks.html5 as t
 from bricks.contrib.bem import bem_modifiers, bem_with_modifiers
 from bricks.helpers import join_classes
 
+MDL_REQUIRES = ('mdl',)
+
 
 def factory(tag, cls, help=''):
     """
@@ -36,7 +38,10 @@ def mdl_shadow(func):
             class_ = join_classes(class_, 'mdl-shadow--%sdp' % shadow)
         if 'children' in kwargs:
             args = kwargs.pop('children'), + args
-        return func(*args, class_=class_, **kwargs)
+
+        result =  func(*args, class_=class_, **kwargs)
+        result.requires = MDL_REQUIRES
+        return result
 
     return decorated
 

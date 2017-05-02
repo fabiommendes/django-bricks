@@ -6,6 +6,8 @@ from bricks.helpers import render, attr, attrs, hyperlink, render_tag, safe, \
     markdown, \
     sanitize, join_classes, js_class
 from bricks.helpers.attr import html_safe_natural_attr
+from bricks.helpers.hyperlink import parse_link
+from bricks.helpers.render import pretty
 from bricks.tests.testapp.models import RenderableModel
 
 
@@ -111,6 +113,11 @@ class TestHyperlink:
         with pytest.raises(TypeError):
             hyperlink(b'sdfsdf')
 
+    def test_parse_link_function(self):
+        assert parse_link('foo') == ('foo', None)
+        assert parse_link('foo<bar>') == ('foo', 'bar')
+        assert parse_link('foo <bar>') == ('foo', 'bar')
+
 
 class TestRender:
     """
@@ -184,3 +191,7 @@ class TestRender:
             x = render(foo)
             args, kwargs = result.pop()
             assert kwargs['context'] == {'x': foo, 'request': None}
+
+    def test_pretty_printer(self):
+        html = pretty('<div><p>foo</p></div>').strip()
+        assert html == '<div>\n  <p>foo</p>\n</div>'

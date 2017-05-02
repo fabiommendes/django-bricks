@@ -97,5 +97,5 @@ def parse_link(name):
     if name.endswith('>'):
         name, sep, link = name.partition('<')
         if sep:
-            return name, link[:-1]
+            return name.rstrip(), link[:-1]
     return name, None
