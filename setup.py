@@ -19,7 +19,7 @@ setup(
     version=version,
     author='Fábio Macêdo Mendes',
     author_email='fabiomacedomendes@gmail.com',
-    url='',
+    url='https://github.com/fabiommendes/django-bricks/',
     description='A short description for your project.',
     long_description=codecs.open('README.rst', 'rb', 'utf8').read(),
 
@@ -38,8 +38,9 @@ setup(
     ],
 
     # Extra files
+    include_package_data=True,
     package_data={
-        'bricks.apps': ['static/js/bricks/*.js'],
+        'bricks.apps': ['*.js', 'static/js/bricks/*.js'],
     },
 
     # Packages and dependencies
