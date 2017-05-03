@@ -10,7 +10,7 @@ meta = '''# Automatically created. Please do not edit.
 __version__ = '%s'
 __author__ = 'Fábio Macêdo Mendes'
 ''' % version
-with open(path, 'w') as F:
+with open(path, 'w', encoding='utf-8') as F:
     F.write(meta)
 
 setup(
@@ -19,7 +19,7 @@ setup(
     version=version,
     author='Fábio Macêdo Mendes',
     author_email='fabiomacedomendes@gmail.com',
-    url='',
+    url='https://github.com/fabiommendes/django-bricks/',
     description='A short description for your project.',
     long_description=codecs.open('README.rst', 'rb', 'utf8').read(),
 
@@ -36,6 +36,12 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Topic :: Software Development :: Libraries',
     ],
+
+    # Extra files
+    include_package_data=True,
+    package_data={
+        'bricks.apps': ['*.js', 'static/js/bricks/*.js'],
+    },
 
     # Packages and dependencies
     package_dir={'': 'src'},
