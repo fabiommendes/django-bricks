@@ -10,7 +10,7 @@ meta = '''# Automatically created. Please do not edit.
 __version__ = '%s'
 __author__ = 'Fábio Macêdo Mendes'
 ''' % version
-with open(path, 'w') as F:
+with open(path, 'w', encoding='utf-8') as F:
     F.write(meta)
 
 setup(
@@ -36,6 +36,11 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Topic :: Software Development :: Libraries',
     ],
+
+    # Extra files
+    package_data={
+        'bricks.apps': ['static/js/bricks/*.js'],
+    },
 
     # Packages and dependencies
     package_dir={'': 'src'},
