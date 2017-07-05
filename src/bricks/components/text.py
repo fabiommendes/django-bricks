@@ -11,6 +11,8 @@ class Text(Markup):
     """
 
     __slots__ = ()
+    requires = ()
+    roots = ()
 
     @property
     def children(self):

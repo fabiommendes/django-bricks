@@ -16,9 +16,10 @@ def pyml_request(func):
     """
 
     def decorated(ctx, obj, *args, **kwargs):
-        kwargs['request'] = ctx.get('request', None)
+        kwargs['request'] = ctx.get('request')
         return func(obj, *args, **kwargs)
     return functools.wraps(func)(decorated)
+
 
 env_filters = {
     'attrs': attrs,

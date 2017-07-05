@@ -4,9 +4,6 @@ class AssetNotRegisteredError(Exception):
     """
 
 
-Error = Exception
-
-
 class EvalError(Exception):
     """
     Error regarding the use of js function eval()

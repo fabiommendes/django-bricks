@@ -1,6 +1,7 @@
 from .components.html5_tags import *  # noqa
 from .components.text import Text, html  # noqa
 from .components import html5_tags as tags
+from .queries import * # noqa
 
 
 def a_or_p(*args, href=None, **kwargs):
@@ -22,4 +23,6 @@ def a_or_span(*args, href=None, **kwargs):
     if href:
         return tags.a(*args, href=href, **kwargs)
     else:
-        return tags.span(*args, href=href, **kwargs)
+        return tags.span(*args, **kwargs)
+
+

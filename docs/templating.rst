@@ -2,11 +2,12 @@
 Templating
 ==========
 
-The goal of ``bricks.html5`` is to replace your template engine by Python code
-that generates HTML fragments. This approach removes the constraints imposed by
-the template language and makes integration with surrounding Python code trivial.
+The goal of ``bricks.html5`` is to replace a template engine such as Jinja2 by
+Python code that generates HTML fragments. This approach removes the constraints
+imposed by the template language and makes integration with surrounding Python
+code trivial.
 
-I know what you are thinking: *"it is a really bad idea to mix template with
+I know you are probably thinking: *"it is a really bad idea to mix template with
 logic"*. Bricks obviously doesn't prevent you from shooting yourself on the foot
 and you can make really messy code if you want. However, things can be very
 smooth if you stick to focused and simple components that adopt a more
@@ -163,6 +164,11 @@ of a tag constructor.
     # <div my_attr="1" attrs="2" data-attr="3">foo</div>
 
     div('foo', attrs={'my_attr': 1, 'attrs': 2}, data_attr=3)
+
+
+Functional API
+--------------
+
 
 
 Imperative API
