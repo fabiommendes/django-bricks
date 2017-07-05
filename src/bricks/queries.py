@@ -1,32 +1,40 @@
-from .components.html5_tags import Tag
 from .components.text import Text
-from typing import List
 
 
-def query_for_attrs(current_node: Tag, attrs) -> Tag:
+def query_for_attrs(node, attrs):
     """
-    Get a nodes by its attribrutes
+    Verify if the given node, has all the given attribrutes.
+
+    If all given attributes were found in the given node,
+    then returns the given node otherwise None
+
 
     Ex:
+        node = button(class_='btn btn-success', onclick='alert(123)') [ 'Click here !' ]
         query_for_attrs(node, {'onclick': 'alert(123)'})
     """
-    found = 0
-    node = None
+    attrs_found = 0
 
     for key in attrs:
-        if key in current_node.attrs.keys() and \
-        current_node.attrs[key] == attrs[key]:
-            found += 1
+        # For each attr found, it increments the attrs_found
+        if key in node.attrs.keys() and \
+        node.attrs[key] == attrs[key]:
+            attrs_found += 1
 
-    if found == len(attrs):
-        node = current_node
+    # The attrs_found length must match the given attrs length
+    if attrs_found == len(attrs):
+        return node
+    else:
+        return None
 
-    return node
 
-
-def query_in_children(node: Tag, **kwargs) -> List[Tag]:
+def query_in_children(node, **kwargs):
     """
-    Query in the children of a given node
+    Query in each children of a given node and returns all found.
+
+    It will execute query for each child of the given node with the given kwargs.
+    If a child is a Text tag, it will be ignored.
+    If the query return isn't None then it is added to found list.
     """
     found = []
 
@@ -34,24 +42,25 @@ def query_in_children(node: Tag, **kwargs) -> List[Tag]:
         if isinstance(child, Text):
             continue
 
-        query_result = query(child, **kwargs)
-
-        if query_result != None:
-            if isinstance(query_result, list):
-                found += query_result
-            else:
-                found.append(query_result)
+        found += query(child, **kwargs)
 
     return found
 
 
-def query(current_node: Tag, **kwargs) -> List[Tag]:
+def query(current_node, **kwargs):
     """
-    Get a node by tag, classes or attribrutes
+    Get a node by tag, classes and attributes.
+    It will also look in the children of the given node.
+    If no node is found, it will returns an empty list.
 
     Ex:
+        # All nodes that has a span tag
         query(node, tag='span')
+
+        # All nodes that has a class 'b'
         query(node, attrs={'class': 'b'})
+
+        # All nodes that has an onclick attr with value 'alert(123)'
         query(node, attrs={'onclick': 'alert(123)'})
     """
 
