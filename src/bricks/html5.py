@@ -23,3 +23,5 @@ def a_or_span(*args, href=None, **kwargs):
         return tags.a(*args, href=href, **kwargs)
     else:
         return tags.span(*args, **kwargs)
+
+
