@@ -1,7 +1,6 @@
 from .components.html5_tags import *  # noqa
 from .components.text import Text, html  # noqa
 from .components import html5_tags as tags
-from .queries import * # noqa
 
 
 def a_or_p(*args, href=None, **kwargs):
