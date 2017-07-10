@@ -1,6 +1,18 @@
 from .components.text import Text
 
 
+def query_in_children(node, **attrs):
+    sub_queries = []
+
+    for child in node.children:
+        if isinstance(child, Text):
+            continue
+
+        sub_queries.extend(query(child, **attrs))
+
+    return sub_queries
+
+
 def query_for_attrs(node, **attrs):
     keys_found = 0
 
@@ -12,6 +24,22 @@ def query_for_attrs(node, **attrs):
     return keys_found == len(attrs)
 
 
+def tag_compare_factory(tag):
+    return lambda brick: brick.tag_name == tag
+
+
+def class_compare_factory(class_):
+    return lambda brick: "".join(brick.classes) == class_
+
+
+def other_attrs_compare_factory(**attrs):
+    return lambda brick: query_for_attrs(brick, **attrs)
+
+
+def join_factories(*factories):
+    return lambda brick: all(fn(brick) for fn in factories)
+
+
 def query(node, **attrs):
     found = []
     factories = []
@@ -19,30 +47,17 @@ def query(node, **attrs):
 
     if 'tag' in attrs.keys():
         attrs_copy.pop('tag')
-
-        factories.append(
-            lambda brick: brick.tag_name == attrs['tag']
-        )
+        factories.append(tag_compare_factory(attrs['tag']))
 
     if 'class_' in attrs.keys():
         attrs_copy.pop('class_')
+        factories.append(class_compare_factory(attrs['class_']))
 
-        factories.append(
-            lambda brick: "".join(brick.classes) == attrs['class_']
-        )
+    factories.append(other_attrs_compare_factory(**attrs_copy))
 
-    factories.append(
-        lambda brick: query_for_attrs(brick, **attrs_copy)
-    )
-
-    if all(fn(node) for fn in factories):
+    if join_factories(*factories) (node):
         found.append(node)
 
-    for child in node.children:
-        if isinstance(child, Text):
-            continue
-
-        found.extend(query(child, **attrs))
-
+    found.extend(query_in_children(node, **attrs))
 
     return found
