@@ -1,3 +1,7 @@
+.. warning::
+
+   This project is no longer maintained. Its functionality has been superseded by `htpy <https://htpy.dev>`_ and `django-components <https://github.com/django-components/django-components>`_.
+
 .. image:: https://readthedocs.org/projects/bricks/badge/?version=latest
     :target: http://bricks.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
